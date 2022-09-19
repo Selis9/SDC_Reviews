@@ -16,7 +16,7 @@ const pullReviewsMeta = async (params) => {
 }
 
 const pullReviewsCharacteristics = async (params) => {
-  return await postgreQuery(`SELECT characteristics.id, reviews_characteristics.value, characteristics.name FROM reviews_characteristics JOIN reviews ON reviews.id = reviews_characteristics.review_id JOIN characteristics ON reviews.product_id = characteristics.product_id WHERE reviews.product_id = $1`, params)
+  return await postgreQuery(`SELECT characteristics.id, characteristics.name, reviews_characteristics.value FROM reviews JOIN reviews_characteristics ON reviews_characteristics.review_id = reviews.id JOIN characteristics ON characteristics.id = reviews_characteristics.characteristic_id WHERE reviews.product_id = $1;`, params)
 }
 
 const saveReviews = async (params) => {

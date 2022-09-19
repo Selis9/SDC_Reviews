@@ -77,6 +77,9 @@ const getProductMeta = async (req, res) => {
         charLength[char.name]++;
       }
     })
+    console.log(characteristicsData)
+    console.log(charLength)
+    console.log(charData)
     characteristicsData.forEach(char => {
       characteristics[char.name] = {
         "id": char.id,

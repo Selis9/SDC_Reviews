@@ -1,4 +1,5 @@
 var express = require('express');
+const cors = require('cors');
 
 // Router
 var router = require('./routes.js');
@@ -11,6 +12,7 @@ module.exports.app = app;
 app.set('port', 3000);
 
 app.use(express.json());
+app.use(cors());
 
 // Set up our routes
 app.use('/', router);

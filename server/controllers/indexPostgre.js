@@ -10,27 +10,28 @@ const getProductReviews = async (req, res) => {
     let params = [ req.body.product_id || req.params.product_id || req.query.product_id,
                  req.body.page || req.params.page || req.query.page || 0,
                  req.body.count || req.params.count || req.query.count || 5 ];
+    console.log(params)
     let data = await pullReviews(params);
     let photosData = await Promise.all(data.map(review => pullReviewPhotos([review.id])))
     let result = {
       "product": parseInt(req.params.product_id || req.query.product_id || req.body.product_id) || 1,
       "page": parseInt(req.params.page) || 0,
       "count": parseInt(req.params.count) || 5,
-      "results": await Promise.all(data.map(review => {
+      "results": data.map(review => {
         return {
         "review_id": review.id,
         "rating": review.rating,
         "summary": review.summary,
         "recommend": review.recommend,
-        "response": review.response,
+        "response": review.response || ' ',
         "body": review.body,
         "reviewer_name": review.reviewer_name,
         "helpfulness": review.helpfulness,
         "photos": photosData[data.indexOf(review)]
       }
-      }))
+      })
     }
-    res.send(result);
+    res.send((result));
   } catch {
     res.sendStatus(404);
   }
@@ -41,23 +42,29 @@ const getProductMeta = async (req, res) => {
     if ((req.body.product_id === undefined) && (req.query.product_id === undefined) && (req.params.product_id === undefined)) {
       res.sendStatus(404);
     }
+
     let params = [ req.body.product_id || req.params.product_id || req.query.product_id];
     let data = await pullReviewsMeta(params);
-    let ratings = {};
-    let recommended = {"false": 0, "true":0};
+
+    let ratings = {
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0
+    };
+
+    let recommended = {
+      "false":0,
+      "true":0
+    };
+
     data.forEach(review => {
-      if (!ratings.hasOwnProperty(review.rating)) {
-        ratings[review.rating] = 1;
-      } else {
         ratings[review.rating]++
-      }
-      if ((review.recommend)) {
-        recommended["true"]++
-      } else {
-        recommended["false"]++
-      }
+        recommended[review.recommend]++
     })
-    let characteristicsData = await pullReviewsCharacteristics(params)
+
+    let characteristicsData = await pullReviewsCharacteristics(params);
     let characteristics = {};
     let charLength = {};
     let charData = {};

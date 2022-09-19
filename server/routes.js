@@ -11,6 +11,7 @@ var router = require('express').Router();
 
 // Postgre
 router.get('/reviews/meta/:product_id', controllerPostgre.getProductMeta)
+router.get('/reviews/meta', controllerPostgre.getProductMeta)
 router.get('/reviews/:product_id', controllerPostgre.getProductReviews)
 router.get('/reviews', controllerPostgre.getProductReviews);
 

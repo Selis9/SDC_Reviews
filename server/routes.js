@@ -1,8 +1,8 @@
-var controllerMongo = require('./controllers/indexMongo.js');
-var controllerPostgre = require('./controllers/indexPostgre.js');
-var router = require('express').Router();
+// const controllerMongo = require('./controllers/indexMongo.js');
+const router = require('express').Router();
+const controllerPostgre = require('./controllers/indexPostgre');
 
-//Connect controller methods to their corresponding routes
+// Connect controller methods to their corresponding routes
 
 // MongoDB
 // router.post('/reviews', controllerMongo.postReviews);
@@ -10,12 +10,12 @@ var router = require('express').Router();
 // router.post('/characteristics', controllerMongo.postCharacteristics);
 
 // Postgre
-router.get('/reviews/meta/:product_id', controllerPostgre.getProductMeta)
-router.get('/reviews/meta', controllerPostgre.getProductMeta)
-router.get('/reviews/:product_id', controllerPostgre.getProductReviews)
+router.get('/reviews/meta/:product_id', controllerPostgre.getProductMeta);
+router.get('/reviews/meta', controllerPostgre.getProductMeta);
+router.get('/reviews/:product_id', controllerPostgre.getProductReviews);
 router.get('/reviews', controllerPostgre.getProductReviews);
 
-router.post('/reviews', controllerPostgre.postReviews);
+router.post('/reviews/:product_id', controllerPostgre.postReviews);
 
 router.put('/reviews/:review_id/helpful', controllerPostgre.putReviewsHelpful);
 router.put('/reviews/:review_id/report', controllerPostgre.putReviewsReport);

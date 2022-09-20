@@ -1,11 +1,10 @@
-var express = require('express');
+const express = require('express');
 const cors = require('cors');
 
 // Router
-var router = require('./routes.js');
+const router = require('./routes');
 
-
-var app = express();
+const app = express();
 module.exports.app = app;
 
 // Set what we are listening on.

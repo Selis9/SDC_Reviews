@@ -1,8 +1,8 @@
-const promise = require('bluebird')
-require("dotenv").config();
+const promise = require('bluebird');
+require('dotenv').config();
 
 const initOptions = {
-  promiseLib: promise // overriding the default (ES6 Promise);
+  promiseLib: promise, // overriding the default (ES6 Promise);
 };
 
 const pgp = require('pg-promise')(initOptions);
@@ -13,13 +13,13 @@ const cn = {
   database: process.env.DB_NAME,
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
-  max: 30
-}
+  max: 30,
+};
 
 const db = pgp(cn);
 
-const initializeDB = async() => {
-    db.any(`
+const initializeDB = async () => {
+  db.any(`
       CREATE TABLE IF NOT EXISTS reviews (
         id SERIAL PRIMARY KEY,
         product_id INTEGER NOT NULL,
@@ -53,18 +53,11 @@ const initializeDB = async() => {
         product_id INTEGER NOT NULL REFERENCES reviews(product_id),
         name VARCHAR(50) NOT NULL
       );
-      `)
+      `);
 };
+
 initializeDB();
 
-const postgreQuery = async (query, params) => {
-  try {
-    return await db.any(query, params)
-  } catch (error) {
-    console.log(error)
-  }
-}
+const postgreQuery = (query, params) => db.any(query, params).catch((err) => console.log(err));
 
 module.exports.postgreQuery = postgreQuery;
-
-

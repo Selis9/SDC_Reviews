@@ -10,18 +10,17 @@ const getProductReviews = async (req, res) => {
       && req.params.product_id === undefined) {
       res.sendStatus(404);
     }
-    const params = [req.body.product_id || req.params.product_id || req.query.product_id,
-      req.params.page || 0,
-      req.params.count || 5];
 
-    const data = await pullReviews(params);
-    const photosData = await Promise.all(data.map((review) => pullReviewPhotos([review.id])));
+    const data = await pullReviews(req.body.product_id || req.params.product_id
+      || req.query.product_id, req.params.page || 0, req.params.count || 5);
 
-    const result = {
+    const photosData = await Promise.all(data.rows.map((review) => pullReviewPhotos(review.id)));
+
+    const result = await {
       product: req.params.product_id || req.query.product_id || req.body.product_id || 1,
       page: req.params.page || 0,
       count: req.params.count || 5,
-      results: data.map((review) => ({
+      results: data.rows.map((review) => ({
         review_id: review.id,
         rating: review.rating,
         summary: review.summary,
@@ -30,7 +29,7 @@ const getProductReviews = async (req, res) => {
         body: review.body,
         reviewer_name: review.reviewer_name,
         helpfulness: review.helpfulness,
-        photos: photosData[data.indexOf(review)],
+        photos: photosData[data.rows.indexOf(review)].rows,
       })),
     };
 
@@ -47,7 +46,7 @@ const getProductMeta = async (req, res) => {
       res.sendStatus(404);
     }
 
-    const params = [req.body.product_id || req.params.product_id || req.query.product_id];
+    const params = req.body.product_id || req.params.product_id || req.query.product_id;
     const data = await pullReviewsMeta(params);
 
     const ratings = {
@@ -63,7 +62,7 @@ const getProductMeta = async (req, res) => {
       true: 0,
     };
 
-    data.forEach((review) => {
+    data.rows.forEach((review) => {
       ratings[review.rating] += 1;
       recommended[review.recommend] += 1;
     });
@@ -72,7 +71,7 @@ const getProductMeta = async (req, res) => {
     const characteristics = {};
     const charLength = {};
     const charData = {};
-    characteristicsData.forEach((char) => {
+    characteristicsData.rows.forEach((char) => {
       // eslint-disable-next-line no-prototype-builtins
       if (!charData.hasOwnProperty(char.name)) {
         charData[char.name] = char.value;
@@ -83,10 +82,10 @@ const getProductMeta = async (req, res) => {
       }
     });
 
-    characteristicsData.forEach((char) => {
+    characteristicsData.rows.forEach((char) => {
       characteristics[char.name] = {
         id: char.id,
-        value: charData[char.name] / charLength[char.name],
+        value: (charData[char.name] / charLength[char.name]).toString(),
       };
     });
 
@@ -104,44 +103,80 @@ const getProductMeta = async (req, res) => {
 };
 
 const postReviews = async (req, res) => {
-  const reviewsParams = [req.body.product_id, req.body.rating, Date.now().toString(),
-    req.body.summary, req.body.body, req.body.recommend, false, req.body.reviewer_name,
-    req.body.reviewer_email, 0];
+  const productId = req.body.product_id || req.params.product_id || req.query.product_id;
+
+  if (typeof productId !== 'number') {
+    res.sendStatus(422);
+  }
+
+  if (typeof req.body.rating !== 'number' && (req.body.rating < 1 || req.body.rating > 5)) {
+    res.sendStatus(422);
+  }
+
+  if (req.body.summary.length === 0 || req.body.summary > 255) {
+    res.sendStatus(422);
+  }
+
+  if (req.body.body.length === 0) {
+    res.sendStatus(422);
+  }
+
+  if (typeof req.body.recommend !== 'boolean') {
+    res.sendStatus(422);
+  }
+
+  if (req.body.reviewer_name === 0 || req.body.reviewer_name > 50) {
+    res.sendStatus(422);
+  }
+
+  if (req.body.reviewer_email === 0 || req.body.reviewer_email > 50) {
+    res.sendStatus(422);
+  }
 
   try {
-    await saveReviews(reviewsParams);
-    req.body.photos.forEach(async (photo) => {
-      await savePhotos([photo]);
+    await saveReviews(
+      productId,
+      req.body.rating,
+      Date.now().toString(),
+      req.body.summary,
+      req.body.body,
+      req.body.recommend,
+      req.body.reviewer_name,
+      req.body.reviewer_email,
+    );
+
+    req.body.photos.forEach((photo) => {
+      savePhotos(photo);
     });
 
     const chars = Object.entries(req.body.characteristics);
-    chars.forEach(async (char) => {
-      await saveCharacteristics([char]);
+    await chars.forEach((char) => {
+      saveCharacteristics(char[0], char[1]);
     });
 
-    res.send(201).status('CREATED!');
-  } catch {
-    res.send(404);
+    res.sendStatus(201);
+  } catch (error) {
+    res.sendStatus(404);
   }
 };
 
 const putReviewsHelpful = async (req, res) => {
-  const params = [req.body.review_id];
+  const params = req.body.review_id || req.params.review_id || req.query.review_id;
   try {
     updateReviewsHelpful(params);
-    res.send('Updated Helpful');
+    res.sendStatus('Updated Helpful');
   } catch (error) {
-    res.send(404);
+    res.sendStatus(404);
   }
 };
 
 const putReviewsReport = async (req, res) => {
-  const params = [req.body.review_id];
+  const params = req.body.review_id || req.params.review_id || req.query.review_id;
   try {
     updateReviewsReport(params);
-    res.send('Updated Helpful');
+    res.sendStatus('Updated Helpful');
   } catch (error) {
-    res.send(404);
+    res.sendStatus(404);
   }
 };
 

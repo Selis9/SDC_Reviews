@@ -1,37 +1,38 @@
-const promise = require('bluebird');
 require('dotenv').config();
+const { Pool } = require('pg');
 
-const initOptions = {
-  promiseLib: promise, // overriding the default (ES6 Promise);
-};
-
-const pgp = require('pg-promise')(initOptions);
-
-const cn = {
+const pool = new Pool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
   database: process.env.DB_NAME,
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
-  max: 30,
-};
-
-const db = pgp(cn);
+  max: 50,
+});
 
 const initializeDB = async () => {
-  await db.any(`
+  await pool.query(`
       COPY reviews (id,product_id,rating,date,summary,body,recommend,reported,reviewer_name,reviewer_email,response,helpfulness)
         FROM '/Users/tonykang/Hack Reactor SEI/SDC_Reviews/server/databases/initLoad/reviews.csv' csv header;
   `);
-  await db.any(`
-      COPY characteristics (id,characteristic_id,review_id,value)
+
+  await pool.query(`SELECT setval(pg_get_serial_sequence('reviews', 'id'), coalesce(max(id),0) + 1, false) FROM reviews`);
+
+  await pool.query(`
+      COPY reviews_characteristics (id,characteristic_id,review_id,value)
         FROM '/Users/tonykang/Hack Reactor SEI/SDC_Reviews/server/databases/initLoad/characteristic_reviews.csv' csv header;
   `);
-  await db.any(`
-      COPY photos (id,review_id,url)
+
+  await pool.query(`SELECT setval(pg_get_serial_sequence('reviews_characteristics', 'id'), coalesce(max(id),0) + 1, false) FROM reviews_characteristics`);
+
+  await pool.query(`
+      COPY reviews_photos (id,review_id,url)
         FROM '/Users/tonykang/Hack Reactor SEI/SDC_Reviews/server/databases/initLoad/reviews_photos.csv' csv header;
   `);
-  await db.any(`
+
+  await pool.query(`SELECT setval(pg_get_serial_sequence('reviews_photos', 'id'), coalesce(max(id),0) + 1, false) FROM reviews_photos`);
+
+  await pool.query(`
     COPY characteristics (id,product_id,name)
       FROM '/Users/tonykang/Hack Reactor SEI/SDC_Reviews/server/databases/initLoad/characteristics.csv' csv header;
   `);

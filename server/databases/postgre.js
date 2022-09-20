@@ -1,25 +1,17 @@
-const promise = require('bluebird');
 require('dotenv').config();
+const { Pool } = require('pg');
 
-const initOptions = {
-  promiseLib: promise, // overriding the default (ES6 Promise);
-};
-
-const pgp = require('pg-promise')(initOptions);
-
-const cn = {
+const pool = new Pool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
   database: process.env.DB_NAME,
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
-  max: 30,
-};
-
-const db = pgp(cn);
+  max: 50,
+});
 
 const initializeDB = async () => {
-  db.any(`
+  await pool.query(`
       CREATE TABLE IF NOT EXISTS reviews (
         id SERIAL PRIMARY KEY,
         product_id INTEGER NOT NULL,
@@ -33,31 +25,31 @@ const initializeDB = async () => {
         reviewer_email VARCHAR(250),
         response VARCHAR(250),
         helpfulness INTEGER DEFAULT 0
-      );
+      );`);
 
+  await pool.query(`
       CREATE TABLE IF NOT EXISTS reviews_photos (
         id SERIAL PRIMARY KEY,
         review_id INTEGER NOT NULL REFERENCES reviews(id),
         url VARCHAR(250) NOT NULL
-      );
+      );`);
 
+  await pool.query(`
       CREATE TABLE IF NOT EXISTS reviews_characteristics (
         id SERIAL PRIMARY KEY,
         characteristic_id INTEGER NOT NULL,
         review_id INTEGER NOT NULL REFERENCES reviews(id),
         value INTEGER NOT NULL
-      );
+      );`);
 
+  await pool.query(`
       CREATE TABLE IF NOT EXISTS characteristics (
         id SERIAL PRIMARY KEY,
-        product_id INTEGER NOT NULL REFERENCES reviews(product_id),
+        product_id INTEGER NOT NULL,
         name VARCHAR(50) NOT NULL
-      );
-      `);
+      );`);
 };
 
 initializeDB();
 
-const postgreQuery = (query, params) => db.any(query, params).catch((err) => console.log(err));
-
-module.exports.postgreQuery = postgreQuery;
+module.exports = pool;

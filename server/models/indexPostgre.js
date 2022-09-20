@@ -1,24 +1,24 @@
-const { postgreQuery } = require('../databases/postgre');
+const db = require('../databases/postgre');
 
-const pullReviews = (params) => postgreQuery(`SELECT reviews.id, reviews.rating, reviews.summary,
-  reviews.recommend, reviews.response, reviews.body, reviews.date, reviews reviewer_name, reviews.helpfulness
-  FROM reviews WHERE product_id = $1 AND reported = false OFFSET $2 LIMIT $3;`, params);
+const pullReviews = (productId, page, count) => db.query(`SELECT reviews.id, reviews.rating, reviews.summary,
+  reviews.recommend, reviews.response, reviews.body, reviews.date, reviews.reviewer_name, reviews.helpfulness
+  FROM reviews WHERE product_id = ${productId} AND reported = false OFFSET ${page} LIMIT ${count};`);
 
-const pullReviewPhotos = (params) => postgreQuery('SELECT id, url FROM reviews_photos WHERE review_id = $1', params);
+const pullReviewPhotos = (reviewId) => db.query(`SELECT id, url FROM reviews_photos WHERE review_id = ${reviewId}`);
 
-const pullReviewsMeta = (params) => postgreQuery('SELECT rating, recommend FROM reviews WHERE product_id = $1', params);
+const pullReviewsMeta = (productId) => db.query(`SELECT rating, recommend FROM reviews WHERE product_id = ${productId}`);
 
-const pullReviewsCharacteristics = (params) => postgreQuery('SELECT characteristics.id, characteristics.name, reviews_characteristics.value FROM reviews JOIN reviews_characteristics ON reviews_characteristics.review_id = reviews.id JOIN characteristics ON characteristics.id = reviews_characteristics.characteristic_id WHERE reviews.product_id = $1;', params);
+const pullReviewsCharacteristics = (productId) => db.query(`SELECT characteristics.id, characteristics.name, reviews_characteristics.value FROM reviews JOIN reviews_characteristics ON reviews_characteristics.review_id = reviews.id JOIN characteristics ON characteristics.id = reviews_characteristics.characteristic_id WHERE reviews.product_id = ${productId};`);
 
-const saveReviews = (params) => postgreQuery('INSERT INTO reviews (id, product_id, rating, date, summary, body, recommend, reported, reviewer_name, reviewer_email, helpfulness) VALUES ((SELECT MAX(id)+1 FROM reviews), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10)', params);
+const saveReviews = (productId, pRating, pDate, pSummary, pBody, pRecommend, reviewerName, reviewerEmail) => db.query(`INSERT INTO reviews (product_id, rating, date, summary, body, recommend, reported, reviewer_name, reviewer_email, response, helpfulness) VALUES (${productId}, ${pRating}, ${pDate}, '${pSummary}', '${pBody}', ${pRecommend}, false, '${reviewerName}', '${reviewerEmail}', null, 0);`);
 
-const savePhotos = (params) => postgreQuery('INSERT INTO reviews_photos (id, review_id, url) VALUES ((SELECT MAX(id)+1 FROM reviews_photos), (SELECT MAX(id) FROM reviews), $1)', params);
+const savePhotos = (url) => db.query(`INSERT INTO reviews_photos (review_id, url) VALUES ((SELECT MAX(id) FROM reviews), '${url}');`);
 
-const saveCharacteristics = (params) => postgreQuery('INSERT INTO reviews_characteristics (id, characteristic_id, review_id, value) VALUES ((SELECT MAX(id)+1 FROM reviews_characteristics), $1, (SELECT MAX(id) FROM reviews), $2)', params);
+const saveCharacteristics = (charId, cValue) => db.query(`INSERT INTO reviews_characteristics (characteristic_id, review_id, value) VALUES (${charId}, (SELECT MAX(id) FROM reviews), ${cValue})`);
 
-const updateReviewsHelpful = (params) => postgreQuery('UPDATE reviews SET helpful = (SELECT helpful FROM reviews WHERE id = $1)+1 WHERE id = $1', params);
+const updateReviewsHelpful = (reviewId) => db.query(`UPDATE reviews SET helpful = (SELECT helpful FROM reviews WHERE id = $1)+1) WHERE id = $${reviewId}`);
 
-const updateReviewsReport = (params) => postgreQuery('UPDATE reviews SET reported = true WHERE id = $1', params);
+const updateReviewsReport = (reviewId) => db.query(`UPDATE reviews SET reported = true WHERE id = ${reviewId}`);
 
 module.exports.pullReviews = pullReviews;
 module.exports.pullReviewPhotos = pullReviewPhotos;

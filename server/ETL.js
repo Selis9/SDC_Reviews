@@ -16,7 +16,7 @@ const initializeDB = async () => {
         FROM '/Users/tonykang/Hack Reactor SEI/SDC_Reviews/server/databases/initLoad/reviews.csv' csv header;
   `);
 
-  await pool.query(`SELECT setval(pg_get_serial_sequence('reviews', 'id'), coalesce(max(id),0) + 1, false) FROM reviews`);
+  await pool.query('SELECT setval(pg_get_serial_sequence(\'reviews\', \'id\'), coalesce(max(id),0) + 1, false) FROM reviews');
 
   await pool.query(`
       COPY reviews_characteristics (id,characteristic_id,review_id,value)

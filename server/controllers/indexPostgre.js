@@ -33,7 +33,7 @@ const getProductReviews = async (req, res) => {
       })),
     };
 
-    res.send((result));
+    res.sendStatus(200).send((result));
   } catch {
     res.sendStatus(404);
   }
@@ -107,56 +107,57 @@ const postReviews = async (req, res) => {
 
   if (typeof productId !== 'number') {
     res.sendStatus(422);
-  }
+  } else
 
   if (typeof req.body.rating !== 'number' && (req.body.rating < 1 || req.body.rating > 5)) {
     res.sendStatus(422);
-  }
+  } else
 
   if (req.body.summary.length === 0 || req.body.summary > 255) {
     res.sendStatus(422);
-  }
+  } else
 
   if (req.body.body.length === 0) {
     res.sendStatus(422);
-  }
+  } else
 
   if (typeof req.body.recommend !== 'boolean') {
     res.sendStatus(422);
-  }
+  } else
 
   if (req.body.reviewer_name === 0 || req.body.reviewer_name > 50) {
     res.sendStatus(422);
-  }
+  } else
 
   if (req.body.reviewer_email === 0 || req.body.reviewer_email > 50) {
     res.sendStatus(422);
-  }
+  } else {
+    console.log('here');
+    try {
+      await saveReviews(
+        productId,
+        req.body.rating,
+        Date.now().toString(),
+        req.body.summary,
+        req.body.body,
+        req.body.recommend,
+        req.body.reviewer_name,
+        req.body.reviewer_email,
+      );
 
-  try {
-    await saveReviews(
-      productId,
-      req.body.rating,
-      Date.now().toString(),
-      req.body.summary,
-      req.body.body,
-      req.body.recommend,
-      req.body.reviewer_name,
-      req.body.reviewer_email,
-    );
+      req.body.photos.forEach((photo) => {
+        savePhotos(photo);
+      });
 
-    req.body.photos.forEach((photo) => {
-      savePhotos(photo);
-    });
+      const chars = Object.entries(req.body.characteristics);
+      await chars.forEach((char) => {
+        saveCharacteristics(char[0], char[1]);
+      });
 
-    const chars = Object.entries(req.body.characteristics);
-    await chars.forEach((char) => {
-      saveCharacteristics(char[0], char[1]);
-    });
-
-    res.sendStatus(201);
-  } catch (error) {
-    res.sendStatus(404);
+      res.sendStatus(201);
+    } catch (error) {
+      res.sendStatus(404);
+    }
   }
 };
 
@@ -164,7 +165,7 @@ const putReviewsHelpful = async (req, res) => {
   const params = req.body.review_id || req.params.review_id || req.query.review_id;
   try {
     updateReviewsHelpful(params);
-    res.sendStatus('Updated Helpful');
+    res.sendStatus(204);
   } catch (error) {
     res.sendStatus(404);
   }
@@ -173,8 +174,9 @@ const putReviewsHelpful = async (req, res) => {
 const putReviewsReport = async (req, res) => {
   const params = req.body.review_id || req.params.review_id || req.query.review_id;
   try {
+    console.log(params);
     updateReviewsReport(params);
-    res.sendStatus('Updated Helpful');
+    res.sendStatus(204);
   } catch (error) {
     res.sendStatus(404);
   }

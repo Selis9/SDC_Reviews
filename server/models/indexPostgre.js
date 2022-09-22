@@ -16,7 +16,7 @@ const savePhotos = (url) => db.query(`INSERT INTO reviews_photos (review_id, url
 
 const saveCharacteristics = (charId, cValue) => db.query(`INSERT INTO reviews_characteristics (characteristic_id, review_id, value) VALUES (${charId}, (SELECT MAX(id) FROM reviews), ${cValue})`);
 
-const updateReviewsHelpful = (reviewId) => db.query(`UPDATE reviews SET helpful = (SELECT helpful FROM reviews WHERE id = $1)+1) WHERE id = $${reviewId}`);
+const updateReviewsHelpful = (reviewId) => db.query(`UPDATE reviews SET helpfulness = helpfulness + 1 WHERE id = ${reviewId}`);
 
 const updateReviewsReport = (reviewId) => db.query(`UPDATE reviews SET reported = true WHERE id = ${reviewId}`);
 

@@ -16,6 +16,7 @@ router.get('/reviews/:product_id', controllerPostgre.getProductReviews);
 router.get('/reviews', controllerPostgre.getProductReviews);
 
 router.post('/reviews/:product_id', controllerPostgre.postReviews);
+router.post('/reviews', controllerPostgre.postReviews);
 
 router.put('/reviews/:review_id/helpful', controllerPostgre.putReviewsHelpful);
 router.put('/reviews/:review_id/report', controllerPostgre.putReviewsReport);

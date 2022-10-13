@@ -15,6 +15,7 @@ app.use(cors());
 
 // Set up our routes
 app.use('/', router);
+app.use(express.static(__dirname + '/public'));
 
 // If we are being run directly, run the server.
 if (!module.parent) {
